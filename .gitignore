@@ -2,6 +2,11 @@
 #
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
 #
+graphs.csv
+graphs.json
+recording.json
+state.json
+
 .utmp/
 /[Ll]ibrary/
 /[Tt]emp/

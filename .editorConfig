@@ -1,0 +1,4 @@
+[*.{cs,vb}]
+dotnet_analyzer_diagnostic.category-Style.severity = none
+dotnet_diagnostic.CA1825.severity = none
+dotnet_diagnostic.IDE0051.severity = none
