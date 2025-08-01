@@ -17,8 +17,6 @@ public class Map
     private string mapPath;
 
     private List<Png> heightmapImages = new List<Png>();
-    private string mapVtmName = "map.vtm";
-    private string missionVtsName = "TestMission2.vts";
 
 
     public float[,] heightmap;
@@ -45,15 +43,18 @@ public class Map
 
     private Map()
     {
-        var args = new CommandLineArguments();
-        if (args.HasArg("--no-map"))
+        if (Options.instance.noMap)
         {
             Debug.Log($"No map flag, skipping map load");
             return;
         }
 
         mapPath = Application.dataPath + "/Resources/Map/";
-        Debug.Log(mapPath);
+        if (Options.instance.map != string.Empty)
+        {
+            mapPath = Options.instance.map;
+        }
+        Debug.Log($"Map load path: {Path.GetFullPath(mapPath)}");
 
         if (!LoadFromIndexed())
         {
@@ -70,7 +71,9 @@ public class Map
         highestOfQuad = new float[height, width];
 
         LoadVTMFile();
+#if !HSGE
         LoadAirbases();
+#endif
         ComputeTerrainHeights();
     }
 
@@ -89,14 +92,33 @@ public class Map
 
     private void LoadVTMFile()
     {
-        mapVtm = ParseVTFile(mapPath + mapVtmName);
-        missionVts = ParseVTFile(mapPath + missionVtsName);
+        var dirFiles = Directory.GetFiles(mapPath);
+
+        string[] vtmFileName = Directory.GetFiles(mapPath, "?*.vtm");
+        string[] vtsFileName = Directory.GetFiles(mapPath, "?*.vts");
+
+        if (vtmFileName.Length == 0)
+        {
+            Debug.LogError($"No VTM file found within {mapPath}");
+            return;
+        }
+
+        if (vtsFileName.Length == 0)
+        {
+            Debug.LogError($"No VTS file found within {mapPath}");
+            return;
+        }
+
+
+        mapVtm = ParseVTFile(vtmFileName[0]);
+        missionVts = ParseVTFile(vtsFileName[0]);
 
         Debug.Log($"Loaded map and mission VT files!");
     }
 
     private Node ParseVTFile(string path)
     {
+        Debug.Log($"Loading VT file: {path}");
         var file = TryLoadTextFile(path);
         if (file == null) throw new Exception($"Unable to load file {path} for ParseVTFile");
 
@@ -112,15 +134,21 @@ public class Map
 
         foreach (var prefab in prefabs)
         {
+            Debug.Log($"PF: {prefab}");
             if (!airbasePrefabs.Contains(prefab.GetValue<string>("prefab"))) continue;
             var tMod = new AirbaseTerrainMod(prefab);
+            Debug.Log($"TMOD: {tMod}");
             terrainMods.Add(tMod);
 
             GameObject airbaseMarker = new GameObject("Airbase");
+            Debug.Log($"Marker: {airbaseMarker}");
+            Debug.Log($"amtf: {airbaseMarker.transform}");
+            Debug.Log($"tmodpos: {tMod.position}");
             airbaseMarker.transform.position = tMod.position;
             airbaseMarker.transform.rotation = tMod.rotation;
-            airbaseMarker.AddComponent<AirbaseBounds>(); // Unity Only
-
+#if !HSGE
+            airbaseMarker.AddComponent<AirbaseBounds>();
+#endif
             airbases.Add(tMod.position);
         }
     }

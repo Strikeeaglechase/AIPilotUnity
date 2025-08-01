@@ -70,7 +70,7 @@ namespace Recorder
         public static void InitEntity(int entityId, string path, string name)
         {
             var initEvent = new EntityInit(entityId, path, name);
-
+            Debug.Log($"Init Event: id={entityId} path={path} name={name}");
             Event(initEvent);
         }
 
@@ -132,14 +132,15 @@ namespace Recorder
             instance.graphData[key][idx] = value;
         }
 
-        public static void Log(string value)
+        public static void Log(string aipName, string value)
         {
             instance.currentFrame.logs.Add(value);
             var maybeSpace = value.StartsWith('[') ? "" : " ";
-            Debug.Log($"[AIP]{maybeSpace}{value}");
+            var logMessage = $"[{aipName}][{Time.time.ToString("000.000")}]{maybeSpace}{value}";
+            Debug.Log($"[AIP]{logMessage}");
 
             if (instance.hasClosedStreams) return;
-            instance.logWriteStream.Write(UTF8Encoding.UTF8.GetBytes(value + "\n"));
+            instance.logWriteStream.Write(UTF8Encoding.UTF8.GetBytes(logMessage + "\n"));
         }
 
         public static void DebugShape(DebugLine line) { Event(line); }
@@ -151,10 +152,11 @@ namespace Recorder
             Event(new RemoveDebugShape(shapeId));
         }
 
-        public static void RecordState(OutboundState state)
+        public static void RecordState(OutboundState state, int aiId)
         {
             if (instance.hasClosedStreams) return;
-            var stateStr = JsonConvert.SerializeObject(state) + "\n";
+            var wrapped = new WrappedState { state = state, aiId = aiId };
+            var stateStr = JsonConvert.SerializeObject(wrapped) + "\n";
             var bytes = UTF8Encoding.UTF8.GetBytes(stateStr);
             instance.stateStream.Write(bytes, 0, bytes.Length);
         }
@@ -255,6 +257,7 @@ namespace Recorder
             logWriteStream = File.Create(logOutputPath);
             stateStream = File.Create(stateOutputPath);
 
+            maxSimTime = Options.instance.maxTime;
             Debug.Log($"Recording file output: {Path.GetFullPath(outputPath)}");
 
             graphData.Add("time", new List<float>());

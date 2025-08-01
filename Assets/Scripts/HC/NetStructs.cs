@@ -48,6 +48,9 @@ public struct NetVector
         stream.Write(BitConverter.GetBytes(y));
         stream.Write(BitConverter.GetBytes(z));
     }
+
+    public static implicit operator Vector3(NetVector v) => v.vec3;
+    public static implicit operator NetVector(Vector3 v) => new NetVector(v);
 }
 
 public struct NetQuaternion
@@ -56,6 +59,23 @@ public struct NetQuaternion
     public float y;
     public float z;
     public float w;
+
+    public NetQuaternion(float x, float y, float z, float w)
+    {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.w = w;
+    }
+
+    public NetQuaternion(Quaternion q)
+    {
+        this.x = q.x;
+        this.y = q.y;
+        this.z = q.z;
+        this.w = q.w;
+    }
+
 
     [JsonIgnore]
     public Quaternion quat { get { return new Quaternion(x, y, z, w); } }
@@ -71,6 +91,9 @@ public struct NetQuaternion
         stream.Write(BitConverter.GetBytes(z));
         stream.Write(BitConverter.GetBytes(w));
     }
+
+    public static implicit operator Quaternion(NetQuaternion q) => q.quat;
+    public static implicit operator NetQuaternion(Quaternion q) => new NetQuaternion(q);
 }
 
 public struct NetColor
@@ -80,16 +103,25 @@ public struct NetColor
     public float b;
     public float a;
 
-    [JsonIgnore]
-    public Color color { get { return new Color(r, g, b, a); } }
+    public NetColor(float r, float g, float b, float a)
+    {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = a;
+    }
 
     public NetColor(Color c)
     {
-        r = c.r;
-        g = c.g;
-        b = c.b;
-        a = c.a;
+        this.r = c.r;
+        this.g = c.g;
+        this.b = c.b;
+        this.a = c.a;
     }
+
+
+    [JsonIgnore]
+    public Color col { get { return new Color(r, g, b, a); } }
 
     public void WriteBytes(MemoryStream stream)
     {
@@ -98,4 +130,7 @@ public struct NetColor
         stream.Write(BitConverter.GetBytes(b));
         stream.Write(BitConverter.GetBytes(a));
     }
+
+    public static implicit operator Color(NetColor q) => q.col;
+    public static implicit operator NetColor(Color q) => new NetColor(q);
 }

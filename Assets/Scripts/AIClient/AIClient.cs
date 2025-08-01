@@ -67,22 +67,12 @@ public class AIClient : MonoBehaviour, IVehicleReadyNotificationHandler, IDamage
         equipManager.equips = startActions.hardpoints.ToList();
     }
 
-    void Start()
-    {
-        // In offline mode we will never receive an entityId, and so will just init instnatly
-        //if (HCManager.offlineMode)
-        //{
-        //    entityId = 1234;
-        //    Recorder.InitEntity(entityId, "Vehicles/FA-26B", "AI Client");
-        //}
-    }
-
     private void FixedUpdate()
     {
         if (aipProvider == null) return;
         var state = BuildState();
 
-        if (aipProvider.outputEnabled) GameRecorder.RecordState(state);
+        if (aipProvider.outputEnabled) GameRecorder.RecordState(state, entityId);
 
         var aipResult = aipProvider.Update(state);
 
@@ -120,6 +110,15 @@ public class AIClient : MonoBehaviour, IVehicleReadyNotificationHandler, IDamage
                 break;
             case InboundAction.RadarSetPDT:
                 radar.pdtTwsIdx = reader.Read();
+                break;
+            case InboundAction.RadarFov:
+                radar.radarFov = reader.Read();
+                break;
+            case InboundAction.RadarAzimuth:
+                radar.currentAzimuthAdjust = reader.Read();
+                break;
+            case InboundAction.RadarElevation:
+                radar.currentElevationAdjust = reader.Read();
                 break;
             case InboundAction.Fire:
                 equipManager.FireSelectedMissile();

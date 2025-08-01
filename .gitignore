@@ -6,6 +6,7 @@ graphs.csv
 graphs.json
 recording.json
 state.json
+rvt.json
 
 .utmp/
 /[Ll]ibrary/
